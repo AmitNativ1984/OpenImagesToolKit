@@ -1,3 +1,4 @@
+import numpy as np
 import os
 import cv2
 from tqdm import tqdm
@@ -18,22 +19,23 @@ def download(args, df_val, folder, dataset_dir, class_name, class_code, class_li
     :param threads: number of threads
     :return: None
     '''
-    if os.name == 'posix':
-        rows, columns = os.popen('stty size', 'r').read().split()
-    elif os.name == 'nt':
-        try:
-            columns, rows = os.get_terminal_size(0)
-        except OSError:
-            columns, rows = os.get_terminal_size(1)
-    else:
-        columns = 50
+    # if os.name == 'posix':
+    #     rows, columns = os.popen('stty size', 'r').read().split()
+    # elif os.name == 'nt':
+    #     try:
+    #         columns, rows = os.get_terminal_size(0)
+    #     except OSError:
+    #         columns, rows = os.get_terminal_size(1)
+    # else:
+    #     columns = 50
+    columns = 50
     l = int((int(columns) - len(class_name))/2)
 
     print ('\n' + bc.HEADER + '-'*l + class_name + '-'*l + bc.ENDC)
     print(bc.INFO + 'Downloading {} images.'.format(args.type_csv) + bc.ENDC)
     df_val_images = images_options(df_val, args)
 
-    images_list = df_val_images['ImageID'][df_val_images.LabelName == class_code].values
+    images_list = df_val_images['ImageID'][df_val_images.LabelName == class_code[class_name]].values
     images_list = set(images_list)
     print(bc.INFO + '[INFO] Found {} online images for {}.'.format(len(images_list), folder) + bc.ENDC)
 
@@ -111,12 +113,20 @@ def get_label(folder, dataset_dir, class_name, class_code, df_val, class_list, a
         downloaded_images_list = [f.split('.')[0] for f in os.listdir(download_dir) if f.endswith('.jpg')]
         images_label_list = list(set(downloaded_images_list))
 
-        groups = df_val[(df_val.LabelName == class_code)].groupby(df_val.ImageID)
+        for i, cls in enumerate(list(class_code.values())):
+            curr_inds = np.array(df_val.LabelName == cls)
+            if i == 0 :
+                inds = curr_inds
+            else:
+                inds = inds | curr_inds # logical or of numpy arrays
+
+        groups = df_val[inds].groupby(df_val.ImageID)
         for image in images_label_list:
             try:
                 current_image_path = os.path.join(download_dir, image + '.jpg')
                 dataset_image = cv2.imread(current_image_path)
                 boxes = groups.get_group(image.split('.')[0])[['XMin', 'XMax', 'YMin', 'YMax']].values.tolist()
+                cls_ids = groups.get_group(image.split('.')[0])[['LabelName']].values.tolist()
                 file_name = str(image.split('.')[0]) + '.txt'
                 file_path = os.path.join(label_dir, file_name)
                 if os.path.isfile(file_path):
@@ -124,14 +134,14 @@ def get_label(folder, dataset_dir, class_name, class_code, df_val, class_list, a
                 else:
                     f = open(file_path, 'w')
 
-                for box in boxes:
+                for box, cls_id in zip(boxes, cls_ids):
                     box[0] *= int(dataset_image.shape[1])
                     box[1] *= int(dataset_image.shape[1])
                     box[2] *= int(dataset_image.shape[0])
                     box[3] *= int(dataset_image.shape[0])
-
+                    cls_name = list(class_code.keys())[list(class_code.values()).index(cls_id[0])]
                     # each row in a file is name of the class_name, XMin, YMix, XMax, YMax (left top right bottom)
-                    print(class_name, box[0], box[2], box[1], box[3], file=f)
+                    print(cls_name, box[0], box[2], box[1], box[3], file=f)
 
             except Exception as e:
                 pass

@@ -119,9 +119,9 @@ def bounding_boxes_images(args, DEFAULT_OID_DIR):
 					name_file = file_list[1]
 					df_val = TTV(csv_dir, name_file, args.yes)
 					if not args.n_threads:
-						download(args, df_val, folder[1], dataset_dir, class_name, class_dict[class_name], class_list)
+						download(args, df_val, folder[1], dataset_dir, class_name, class_dict, class_list)
 					else:
-						download(args, df_val, folder[1], dataset_dir, class_name, class_dict[class_name], class_list, int(args.n_threads))
+						download(args, df_val, folder[1], dataset_dir, class_name, class_dict, class_list, int(args.n_threads))
 
 				elif args.type_csv == 'test':
 					name_file = file_list[2]
