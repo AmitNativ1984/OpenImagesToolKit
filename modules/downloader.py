@@ -49,9 +49,9 @@ def download(args, df_val, folder, dataset_dir, class_name, class_code, class_li
     else:
         class_name_list = class_name
 
-    download_img(folder, dataset_dir, class_name_list, images_list, threads)
+    images_list = download_img(folder, dataset_dir, class_name_list, images_list, threads)
     if not args.sub:
-        get_label(folder, dataset_dir, class_name, class_code, df_val, class_name_list, args)
+        get_label(folder, dataset_dir, class_name, class_code, df_val, class_name_list, args, images_list)
 
 
 def download_img(folder, dataset_dir, class_name, images_list, threads):
@@ -87,8 +87,9 @@ def download_img(folder, dataset_dir, class_name, images_list, threads):
     else:
         print(bc.INFO + 'All images already downloaded.' +bc.ENDC)
 
+    return images_list
 
-def get_label(folder, dataset_dir, class_name, class_code, df_val, class_list, args):
+def get_label(folder, dataset_dir, class_name, class_code, df_val, class_list, args, images_list):
     '''
     Make the label.txt files
     :param folder: trai, validation or test
@@ -110,8 +111,7 @@ def get_label(folder, dataset_dir, class_name, class_code, df_val, class_list, a
             download_dir = os.path.join(dataset_dir, image_dir, class_name)
             label_dir = os.path.join(dataset_dir, folder, class_name, 'Label')
 
-        downloaded_images_list = [f.split('.')[0] for f in os.listdir(download_dir) if f.endswith('.jpg')]
-        images_label_list = list(set(downloaded_images_list))
+        images_label_list = list(set(images_list))
 
         for i, cls in enumerate(list(class_code.values())):
             curr_inds = np.array(df_val.LabelName == cls)
@@ -130,9 +130,10 @@ def get_label(folder, dataset_dir, class_name, class_code, df_val, class_list, a
                 file_name = str(image.split('.')[0]) + '.txt'
                 file_path = os.path.join(label_dir, file_name)
                 if os.path.isfile(file_path):
-                    f = open(file_path, 'a')
-                else:
-                    f = open(file_path, 'w')
+                    os.remove(file_path)
+                f = open(file_path, 'w')
+                # else:
+                #     f = open(file_path, 'w')
 
                 for box, cls_id in zip(boxes, cls_ids):
                     box[0] *= int(dataset_image.shape[1])
