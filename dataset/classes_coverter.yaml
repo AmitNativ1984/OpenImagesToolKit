@@ -1,0 +1,15 @@
+Person:
+  - Person
+  - Man
+  - Woman
+  - Boy
+  - Girl
+
+Firearm:
+  - Rifle
+  - Shotgun
+  - Handgun
+
+Window:
+  - Window
+  - Door
