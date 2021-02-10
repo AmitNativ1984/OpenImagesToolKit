@@ -1,8 +1,8 @@
 #!/bin/bash
-DATASET_TYPE="test validation"
+DATASET_TYPE="test validation train"
 classes="Person Man Woman Boy Girl Rifle Shotgun Handgun Window Door"
 subfolder=Person_Man_Woman_Boy_Girl_Rifle_Shotgun_Handgun_Window_Door
-limit=20
+limit=2000
 
 for dataset_type in $DATASET_TYPE
 do
@@ -29,6 +29,7 @@ do
   mkdir /home/amit/Data/OID/"$dataset_type"/$subfolder/images
   mv /home/amit/Data/OID/"$dataset_type"/$subfolder/*.jpg /home/amit/Data/OID/"$dataset_type"/$subfolder/images
 
+  echo "creating data text files"
   python /home/amit/Dev/KzirTracking/detector/yolov3/data/utils/create_data_txtfile.py --labels-path /home/amit/Data/OID/"$dataset_type"/$subfolder/labels --output-data-txtfile /home/amit/Data/OID/"$dataset_type"/$subfolder/data.txt
 
 done
